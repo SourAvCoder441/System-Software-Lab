@@ -1,0 +1,7 @@
+    FIRST    START   1000
+1000    FIRST    WORD    4
+1003    LOOP     RESW    5
+1006    BYTEVAR  BYTE    C'HELLO'
+100D    SECOND   RESB    1
+100E    END      END
+

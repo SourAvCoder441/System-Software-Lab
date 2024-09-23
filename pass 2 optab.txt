@@ -1,0 +1,6 @@
+ADD      18
+SUB      1C
+MUL      20
+DIV      24
+WORD     00
+BYTE     00
