@@ -1,0 +1,110 @@
+section .data
+    prompt1 db 'Enter the first number: ', 0
+    prompt1_len equ $ - prompt1
+    prompt2 db 'Enter the second number: ', 0
+    prompt2_len equ $ - prompt2
+    result_msg db 'The sum is: ', 0
+    result_msg_len equ $ - result_msg
+    newline db 0xA  ; Newline character
+
+section .bss
+    num1 resb 4        ; Reserve 4 bytes for the first number
+    num2 resb 4        ; Reserve 4 bytes for the second number
+    result resb 10     ; Buffer for result output (string format)
+
+section .text
+    global _start
+
+_start:
+    ; Prompt for the first number
+    mov eax, 4                ; sys_write
+    mov ebx, 1                ; File descriptor: stdout
+    mov ecx, prompt1          ; Address of prompt1
+    mov edx, prompt1_len      ; Length of prompt1
+    int 0x80                  ; System call
+
+    ; Read the first number
+    mov eax, 3                ; sys_read
+    mov ebx, 0                ; File descriptor: stdin
+    mov ecx, num1             ; Buffer for first number
+    mov edx, 4                ; Maximum 4 bytes
+    int 0x80                  ; System call
+
+    ; Prompt for the second number
+    mov eax, 4                ; sys_write
+    mov ebx, 1                ; File descriptor: stdout
+    mov ecx, prompt2          ; Address of prompt2
+    mov edx, prompt2_len      ; Length of prompt2
+    int 0x80                  ; System call
+
+    ; Read the second number
+    mov eax, 3                ; sys_read
+    mov ebx, 0                ; File descriptor: stdin
+    mov ecx, num2             ; Buffer for second number
+    mov edx, 4                ; Maximum 4 bytes
+    int 0x80                  ; System call
+
+    ; Convert the first number from ASCII to integer
+    mov ecx, num1             ; Load num1 into ecx
+    call atoi                 ; Convert ASCII to integer
+    mov ebx, eax              ; Save the integer result in ebx
+
+    ; Convert the second number from ASCII to integer
+    mov ecx, num2             ; Load num2 into ecx
+    call atoi                 ; Convert ASCII to integer
+    add eax, ebx              ; Add the two integers
+
+    ; Convert the sum from integer to string
+    mov ebx, eax              ; Store the sum in ebx
+    mov ecx, result           ; Point ecx to result buffer
+    call itoa                 ; Convert integer to ASCII string
+
+    ; Display the result message
+    mov eax, 4                ; sys_write
+    mov ebx, 1                ; File descriptor: stdout
+    mov ecx, result_msg       ; Address of result_msg
+    mov edx, result_msg_len   ; Length of result_msg
+    int 0x80                  ; System call
+
+    ; Display the sum
+    mov eax, 4                ; sys_write
+    mov ebx, 1                ; File descriptor: stdout
+    mov ecx, result           ; Address of result (sum as string)
+    mov edx, 10               ; Maximum length of the result
+    int 0x80                  ; System call
+
+    ; Exit the program
+    mov eax, 1                ; sys_exit
+    xor ebx, ebx              ; Status 0
+    int 0x80                  ; System call
+
+; Subroutine to convert ASCII string to integer
+atoi:
+    xor eax, eax              ; Clear eax (result)
+    xor ebx, ebx              ; Clear ebx (multiplier)
+atoi_loop:
+    mov bl, [ecx]             ; Load current byte
+    cmp bl, 0xA               ; Check for newline (Enter key)
+    je atoi_done              ; If newline, finish conversion
+    sub bl, '0'               ; Convert ASCII to integer
+    imul eax, eax, 10         ; Multiply previous result by 10
+    add eax, ebx              ; Add current digit
+    inc ecx                   ; Move to the next character
+    jmp atoi_loop             ; Repeat
+atoi_done:
+    ret
+
+; Subroutine to convert integer to ASCII string
+itoa:
+    mov edx, 0                ; Initialize digit count
+    mov edi, ecx              ; Store address of result buffer
+itoa_loop:
+    xor edx, edx              ; Clear edx
+    mov ebx, 10               ; Divisor (base 10)
+    div ebx                   ; Divide eax by 10
+    add dl, '0'               ; Convert remainder to ASCII
+    dec edi                   ; Move result pointer backwards
+    mov [edi], dl             ; Store the digit
+    test eax, eax             ; Check if eax is zero
+    jnz itoa_loop             ; If not zero, continue
+    ret
