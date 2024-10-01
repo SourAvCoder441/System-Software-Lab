@@ -1,0 +1,87 @@
+section .data
+    prompt1 db 'Enter the first number: ', 0
+    prompt1_len equ $ - prompt1
+    prompt2 db 'Enter the second number: ', 0
+    prompt2_len equ $ - prompt2
+    msg_greater db 'First number is greater', 0xA, 0
+    msg_greater_len equ $ - msg_greater
+    msg_lesser db 'Second number is greater', 0xA, 0
+    msg_lesser_len equ $ - msg_lesser
+    msg_equal db 'Both numbers are equal', 0xA, 0
+    msg_equal_len equ $ - msg_equal
+
+section .bss
+    num1 resb 4    ; Reserve 4 bytes for the first number (binary input)
+    num2 resb 4    ; Reserve 4 bytes for the second number (binary input)
+
+section .text
+    global _start
+
+_start:
+    ; Prompt for the first number
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, prompt1
+    mov edx, prompt1_len
+    int 0x80
+
+    ; Read the first number (4 bytes)
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, num1
+    mov edx, 4
+    int 0x80
+
+    ; Prompt for the second number
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, prompt2
+    mov edx, prompt2_len
+    int 0x80
+
+    ; Read the second number (4 bytes)
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, num2
+    mov edx, 4
+    int 0x80
+
+    ; Load num1 into EAX and num2 into EBX for comparison
+    mov eax, [num1]
+    mov ebx, [num2]
+
+    ; Compare the two numbers
+    cmp eax, ebx
+    jg first_greater   ; Jump if num1 > num2
+    jl second_greater  ; Jump if num1 < num2
+
+    ; If they are equal, print "Both numbers are equal"
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_equal
+    mov edx, msg_equal_len
+    int 0x80
+    jmp exit
+
+first_greater:
+    ; Print "First number is greater"
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_greater
+    mov edx, msg_greater_len
+    int 0x80
+    jmp exit
+
+second_greater:
+    ; Print "Second number is greater"
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_lesser
+    mov edx, msg_lesser_len
+    int 0x80
+
+exit:
+    ; Exit the program
+    mov eax, 1
+    xor ebx, ebx
+    int 0x80
